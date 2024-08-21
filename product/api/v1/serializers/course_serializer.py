@@ -49,21 +49,16 @@ class StudentSerializer(serializers.ModelSerializer):
 class GroupSerializer(serializers.ModelSerializer):
     """Список групп."""
 
-    # TODO Доп. задание
-
     class Meta:
         model = Group
-
+        fields = ('title', 'course')  # Убедитесь, что поле course указано здесь
 
 class CreateGroupSerializer(serializers.ModelSerializer):
     """Создание групп."""
 
     class Meta:
         model = Group
-        fields = (
-            'title',
-            'course',
-        )
+        fields = ('title', 'course')  # Убедитесь, что поле course указано здесь
 
 
 class MiniLessonSerializer(serializers.ModelSerializer):
@@ -86,20 +81,26 @@ class CourseSerializer(serializers.ModelSerializer):
     demand_course_percent = serializers.SerializerMethodField(read_only=True)
 
     def get_lessons_count(self, obj):
-        """Количество уроков в курсе."""
-        # TODO Доп. задание
+        return obj.lessons.count()
 
     def get_students_count(self, obj):
-        """Общее количество студентов на курсе."""
-        # TODO Доп. задание
+        return obj.subscriptions.count()
 
     def get_groups_filled_percent(self, obj):
-        """Процент заполнения групп, если в группе максимум 30 чел.."""
-        # TODO Доп. задание
+        total_groups = obj.groups.count()
+        if total_groups == 0:
+            return 0
+        filled_groups = sum(group.members.count() for group in obj.groups.all())
+        max_members = total_groups * 30
+        return (filled_groups / max_members) * 100
 
     def get_demand_course_percent(self, obj):
-        """Процент приобретения курса."""
-        # TODO Доп. задание
+        total_users = User.objects.count()
+        if total_users == 0:
+            return 0
+        subscribed_users = obj.subscriptions.count()
+        return (subscribed_users / total_users) * 100
+
 
     class Meta:
         model = Course
@@ -122,3 +123,4 @@ class CreateCourseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Course
+        fields = '__all__'
